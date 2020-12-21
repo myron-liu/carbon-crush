@@ -1,0 +1,28 @@
+.homepage-sidebar {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.sidebar-new-game-button {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 18px;
+  width: 200px;
+  height: 50px;
+  background-color: #000000;
+  color: #FFFFFF;
+  border-color: none;
+  border-radius: 10px;
+}
+
+.sidebar-new-game-button:hover {
+  background-color: #FFFFFF;
+  color: #000000;
+  border-color: #000000;
+}
+
+.sidebar-score {
+  margin-top: 10px;
+  padding-top: 10px;
+  font-size: 22px;
+}

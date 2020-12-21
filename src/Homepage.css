@@ -1,0 +1,19 @@
+.homepage {
+  overflow: hidden;
+}
+
+.homepage-menu {
+  width: 25vw;
+  height: 80vh;
+  display: inline-block;
+  margin-top: 20vh;
+}
+
+.homepage-title {
+  font-size: 35px;
+  text-align: center;
+}
+.homepage-subtitle {
+  font-size: 22px;
+  text-align: center;
+}
