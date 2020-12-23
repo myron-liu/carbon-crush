@@ -5,7 +5,7 @@ function Sidebar(props) {
   return (
     <section className="homepage-sidebar">
       <button className="sidebar-new-game-button" onClick={newGameCallback}>New Game</button>
-      <section className="sidebar-score">Score: {score}</section>
+      <section id="sidebar-score" className="sidebar-score">Score: {score}</section>
     </section>
   );
 }

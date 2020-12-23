@@ -60,10 +60,9 @@ export class Game {
     this.refillTokens();
     // capture tokens if there available options 
     // we want to generate a game state that doesn't have automatic captures
-    let hasCapturedTokens = this.captureTokens(false);
-    while (hasCapturedTokens) {
+    while (this.findCapturedTokens().length !== 0) {
+      this.captureTokens(false);
       this.refillTokens();
-      hasCapturedTokens = this.captureTokens(false);
     }
   }
 
@@ -73,6 +72,13 @@ export class Game {
    */
   getBoardSquares() {
     return this.boardSquares;
+  }
+
+  setBoardSquare(token, row, col) {
+    if (!this.isValidLocation(row, col)) {
+      throw new Error(`Invalid location, got row: ${row}, col: ${col}`);
+    }
+    this.boardSquares[row][col] = token;
   }
 
   /**
@@ -136,25 +142,40 @@ export class Game {
     return this.boardSquares[row][col];
   }
 
+    /**
+   * Returns the token corresponding to row and column if it is a valid square on the board.
+   * @param {*number} row - row value (indexed from 0 - starting from top left going right)
+   * @param {*number} col - column value (indexed from 0 - starting from top left going down)
+   * @returns Token object or null
+   */
+  captureToken(row, col) {
+    if (!this.isValidLocation(row, col)) {
+      throw new Error(`Invalid location, got row: ${row}, col: ${col}`);
+    }
+    this.boardScore += this.boardSquares[row][col].value;
+    this.boardSquares[row][col] = null;
+  }
+
+
   isValidMove(x0, y0, x1, y1) {
     const isValidDistance = Math.abs(x1 - x0) <= 1 && Math.abs(y1 - y0) <= 1;
     const isValidLocation = this.isValidLocation(y0, x0) && this.isValidLocation(y1, x1);
     return isValidDistance && isValidLocation;
   }
 
-  flipTokens(x0, y0, x1, y1) {
-    if (this.isValidMove(x0, y0, x1, y1)) {
-      let token0 = this.getToken(y0, x0);
-      let token1 = this.getToken(y1, x1)
-      this.boardSquares[y0][x0] = token1;
-      this.boardSquares[y1][x1] = token0;
+  flipTokens(row0, col0, row1, col1) {
+    if (this.isValidMove(row0, col0, row1, col1)) {
+      let token0 = this.getToken(row0, col0);
+      let token1 = this.getToken(row1, col1)
+      this.boardSquares[row0][col0] = token1;
+      this.boardSquares[row1][col1] = token0;
       if (token1) {
-        token1.x = x0;
-        token1.y = y0;
+        token1.row = row0;
+        token1.col = col0;
       }
       if (token0) {
-        token0.x = x1;
-        token0.y = y1;
+        token0.row = row1;
+        token0.col = col1;
       }
       return true;
     }
@@ -190,6 +211,12 @@ export class Game {
     const { regularTokens } = this.tokenSet;
     const tokenName = regularTokens[Math.floor(Math.random() * regularTokens.length)];
     return new Token(tokenName, 1, row, col);
+  }
+
+  generateToken() {
+    const { regularTokens } = this.tokenSet;
+    const tokenName = regularTokens[Math.floor(Math.random() * regularTokens.length)];
+    return new Token(tokenName, 1, null, null);
   }
 
   findCapturedTokens() {
@@ -229,7 +256,7 @@ export class Game {
       return true;
     }
     // check down side and second down side
-    if (this.detectTriplet(row - 1, col, row - 2, col, name)) {
+    if (this.detectTriplet(row + 1, col, row + 2, col, name)) {
       return true;
     }
     return false;
