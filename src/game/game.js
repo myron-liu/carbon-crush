@@ -1,4 +1,4 @@
-import { DEFAULT_TOKENS, Token } from './token.js';
+import { Token } from './token.js';
 
 /**
  * Game is the coordinator for the gameboard and scoreboard. A gameboard is an array of arrays.
@@ -210,26 +210,88 @@ export class Game {
   spawnToken(row, col) {
     const { regularTokens } = this.tokenSet;
     const tokenName = regularTokens[Math.floor(Math.random() * regularTokens.length)];
-    return new Token(tokenName, 1, row, col);
+    return new Token(tokenName, row, col, false);
   }
 
   generateToken() {
     const { regularTokens } = this.tokenSet;
     const tokenName = regularTokens[Math.floor(Math.random() * regularTokens.length)];
-    return new Token(tokenName, 1, null, null);
+    return new Token(tokenName, null, null, false);
   }
 
   findCapturedTokens() {
-    const tokens = [];
+    const tokens = new Set();
     for (let row = 0; row < this.boardHeight; row++) {
       for (let col = 0; col < this.boardWidth; col++) {
         let token = this.getToken(row, col);
         if (this.detectCapture(token)) {
-          tokens.push(token);
+          tokens.add(token);
+          if (token.isSpecial) {
+            for (let x = 0; x < this.boardWidth; x++) {
+              token = this.getToken(row, x);
+              tokens.add(token);
+            }
+          }
+        }
+      }
+    }
+    return Array.from(tokens);
+  }
+
+  findQuadrupletCapturedTokens() {
+    const tokens = [];
+    for (let row = 0; row < this.boardHeight; row++) {
+      for (let col = 0; col < this.boardWidth; col++) {
+        let token = this.getToken(row, col);
+        const specialTokens = this.detectQuadrupletCapture(token);
+        if (specialTokens.length > 0) {
+          specialTokens.forEach(t => tokens.push(t));
         }
       }
     }
     return tokens;
+  }
+
+  detectQuadrupletCapture(token) {
+    const { row, col, name } = token;
+    const tokenSet = [];
+    
+    const leftToken = this.isValidLocation(row, col - 1) ? this.getToken(row, col - 1) : null;
+    const rightToken = this.isValidLocation(row, col + 1) ? this.getToken(row, col + 1) : null;
+    const secondRightToken = this.isValidLocation(row, col + 2) ? this.getToken(row, col + 2) : null;
+    const thirdRightToken = this.isValidLocation(row, col + 3) ? this.getToken(row, col + 3) : null;
+    const fourthRightToken = this.isValidLocation(row, col + 4) ? this.getToken(row, col + 4) : null;
+
+    const rightTokenMatch = rightToken !== null && this.isTokenMatch(name, rightToken.name);
+    const secondRightTokenMatch = secondRightToken !== null && this.isTokenMatch(name, secondRightToken.name);
+    const thirdRightTokenMatch = thirdRightToken !== null && this.isTokenMatch(name, thirdRightToken.name);
+    const fourthRightTokenMatch = fourthRightToken !== null && this.isTokenMatch(name, fourthRightToken.name);
+
+    const hasLeft = leftToken !== null && this.isTokenMatch(name, leftToken.name);
+    const hasHorizontalQuadruplet = rightTokenMatch && secondRightTokenMatch && thirdRightTokenMatch && !fourthRightTokenMatch;
+
+    if (!hasLeft && hasHorizontalQuadruplet) {
+      tokenSet.push([token, rightToken, secondRightToken, thirdRightToken]);
+    }
+
+    const topToken = this.isValidLocation(row - 1, col) ? this.getToken(row - 1, col) : null;
+    const bottomToken = this.isValidLocation(row + 1, col) ? this.getToken(row + 1, col) : null;
+    const secondBottomToken = this.isValidLocation(row + 2, col) ? this.getToken(row + 2, col) : null;
+    const thirdBottomToken = this.isValidLocation(row + 3, col) ? this.getToken(row + 3, col) : null;
+    const fourthBottomToken = this.isValidLocation(row + 4, col) ? this.getToken(row + 4, col) : null;
+
+    const bottomTokenMatch = bottomToken !== null && this.isTokenMatch(name, bottomToken.name);
+    const secondBottomTokenMatch = secondBottomToken !== null && this.isTokenMatch(name, secondBottomToken.name);
+    const thirdBottomTokenMatch = thirdBottomToken !== null && this.isTokenMatch(name, thirdBottomToken.name);
+    const fourthBottomTokenMatch = fourthBottomToken !== null && this.isTokenMatch(name, fourthBottomToken.name);
+
+    const hasTop = topToken !== null && this.isTokenMatch(name, topToken.name);
+    const hasVerticalQuadruplet = bottomTokenMatch && secondBottomTokenMatch && thirdBottomTokenMatch && !fourthBottomTokenMatch;
+
+    if (!hasTop && hasVerticalQuadruplet) {
+      tokenSet.push([token, bottomToken, secondBottomToken, thirdBottomToken]);
+    }
+    return tokenSet;
   }
 
   detectCapture(token) {
@@ -267,10 +329,14 @@ export class Game {
     if (this.isValidLocation(firstRow, firstCol) && this.isValidLocation(secondRow, secondCol)) {
       const firstToken = this.getToken(firstRow, firstCol);
       const secondToken = this.getToken(secondRow, secondCol);
-      if (firstToken.name === name && secondToken.name === name) {
+      if (this.isTokenMatch(name, firstToken.name) && this.isTokenMatch(name, secondToken.name)) {
         return true;
       }
     }
     return false;
+  }
+
+  isTokenMatch(name, secondName) {
+    return name === secondName || `special-${name}` == secondName || name === `special-${secondName}`;
   }
 }

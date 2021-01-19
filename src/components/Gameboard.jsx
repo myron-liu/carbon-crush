@@ -5,6 +5,13 @@ import HYDROGEN_DIOXIDE from '../assets/hydrogen-dioxide.png';
 import OZONE from '../assets/ozone.png';
 import DICHLORODIFLUOROMETHANE from '../assets/dichlorodifluoromethane.png';
 import METHANE from '../assets/methane.png';
+import SPECIAL_CARBON_DIOXIDE from '../assets/special-carbon-dioxide.png';
+import SPECIAL_NITROUS_OXIDE from '../assets/special-nitrous-oxide.png';
+import SPECIAL_HYDROGEN_DIOXIDE from '../assets/special-hydrogen-dioxide.png';
+import SPECIAL_OZONE from '../assets/special-ozone.png';
+import SPECIAL_DICHLORODIFLUOROMETHANE from '../assets/special-dichlorodifluoromethane.png';
+import SPECIAL_METHANE from '../assets/special-methane.png';
+import { Token } from '../game/token.js';
 import { useEffect } from 'react';
 
 let windowWidth = window.innerWidth;
@@ -19,6 +26,12 @@ const TOKEN_TO_IMAGE_MAP = {
   'ozone': OZONE,
   'dichlorodifluoromethane': DICHLORODIFLUOROMETHANE,
   'methane': METHANE,
+  'special-carbon-dioxide': SPECIAL_CARBON_DIOXIDE,
+  'special-nitrous-oxide': SPECIAL_NITROUS_OXIDE,
+  'special-hydrogen-dioxide': SPECIAL_HYDROGEN_DIOXIDE,
+  'special-ozone': SPECIAL_OZONE,
+  'special-dichlorodifluoromethane': SPECIAL_DICHLORODIFLUOROMETHANE,
+  'special-methane': SPECIAL_METHANE,
 };
 
 function computeRow(game, gameCanvasHeight, offsetY) {
@@ -183,10 +196,30 @@ function captureTokenAnimation(game) {
   const tokenWidth = gameCanvasWidth / game.getBoardWidth();
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
   const capturedTokens = game.findCapturedTokens();
+  const quadrupletCapturedTokens = game.findQuadrupletCapturedTokens();
+  console.log(quadrupletCapturedTokens);
   for (const token of capturedTokens) {
     const { row, col } = token;
     game.captureToken(row, col);
     gameCtx.clearRect(col * tokenWidth, row * tokenHeight, tokenWidth, tokenHeight);
+  }
+  for (let i = 0; i < quadrupletCapturedTokens.length; i++) {
+    const tokenSet = quadrupletCapturedTokens[i];
+    console.log(tokenSet.length);
+    let randToken = tokenSet[Math.floor(Math.random() * tokenSet.length)];
+    let { row, col } = randToken;
+    while (!game.isEmptySquare(row, col)) {
+      randToken = tokenSet[Math.floor(Math.random() * tokenSet.length)];
+      row = randToken.row;
+      col = randToken.col;
+    }
+    const specialToken = new Token(`special-${randToken.name}`, row, col, true);
+    game.setBoardSquare(specialToken, row, col);
+    const tokenImage = new Image();
+    tokenImage.src = TOKEN_TO_IMAGE_MAP[specialToken.name];
+    tokenImage.onload = function() {
+      gameCtx.drawImage(tokenImage, col * tokenWidth, row * tokenHeight, tokenWidth, tokenHeight);
+    }
   }
   actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
   const sidebarScore = document.getElementById("sidebar-score");

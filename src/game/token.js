@@ -2,12 +2,13 @@
  * A token is a tile object associated with an asset. 
  */
 export class Token {
-  constructor(name, value, row, col) {
+  constructor(name, row, col, isSpecial) {
     this.name = name;
-    this.value = value;
+    this.value = 1;
     this.path = `./assets/${name}.png`;
     this.row = row;
     this.col = col;
+    this.isSpecial = isSpecial;
   }
 }
 
