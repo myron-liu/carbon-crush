@@ -105,6 +105,9 @@ export class Game {
     return this.boardScore;
   }
 
+  setBoardScore(score) {
+    this.boardScore = 0;
+  }
 
   /**
    * Returns true if the row and column identify a valid square on the board.

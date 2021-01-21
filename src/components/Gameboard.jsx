@@ -1,38 +1,61 @@
 import './Gameboard.css';
 import CARBON_DIOXIDE from '../assets/carbon-dioxide.png';
+import CFC from '../assets/cfc.png';
+import PFC from '../assets/pfc.png';
+import SULFUR_HEXAFLUORIDE from '../assets/sulfur-hexafluoride.png';
 import NITROUS_OXIDE from '../assets/nitrous-oxide.png';
-import HYDROGEN_DIOXIDE from '../assets/hydrogen-dioxide.png';
-import OZONE from '../assets/ozone.png';
-import DICHLORODIFLUOROMETHANE from '../assets/dichlorodifluoromethane.png';
 import METHANE from '../assets/methane.png';
 import SPECIAL_CARBON_DIOXIDE from '../assets/special-carbon-dioxide.png';
+import SPECIAL_CFC from '../assets/special-cfc.png';
+import SPECIAL_PFC from '../assets/special-pfc.png';
+import SPECIAL_SULFUR_HEXAFLUORIDE from '../assets/special-sulfur-hexafluoride.png';
 import SPECIAL_NITROUS_OXIDE from '../assets/special-nitrous-oxide.png';
-import SPECIAL_HYDROGEN_DIOXIDE from '../assets/special-hydrogen-dioxide.png';
-import SPECIAL_OZONE from '../assets/special-ozone.png';
-import SPECIAL_DICHLORODIFLUOROMETHANE from '../assets/special-dichlorodifluoromethane.png';
 import SPECIAL_METHANE from '../assets/special-methane.png';
 import { Token } from '../game/token.js';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 let windowWidth = window.innerWidth;
 let windowHeight = window.innerHeight;
 let canvasWidth = Math.min(windowWidth * 0.72, windowHeight) * 0.90;
 let mouseUpEventListener = null;
 
-const TOKEN_TO_IMAGE_MAP = {
+const TOKEN_TO_IMAGE_PATH_MAP = {
   'carbon-dioxide': CARBON_DIOXIDE,
   'nitrous-oxide': NITROUS_OXIDE,
-  'hydrogen-dioxide': HYDROGEN_DIOXIDE,
-  'ozone': OZONE,
-  'dichlorodifluoromethane': DICHLORODIFLUOROMETHANE,
+  'cfc': CFC,
+  'pfc': PFC,
+  'sulfur-hexafluoride': SULFUR_HEXAFLUORIDE,
   'methane': METHANE,
   'special-carbon-dioxide': SPECIAL_CARBON_DIOXIDE,
   'special-nitrous-oxide': SPECIAL_NITROUS_OXIDE,
-  'special-hydrogen-dioxide': SPECIAL_HYDROGEN_DIOXIDE,
-  'special-ozone': SPECIAL_OZONE,
-  'special-dichlorodifluoromethane': SPECIAL_DICHLORODIFLUOROMETHANE,
+  'special-cfc': SPECIAL_CFC,
+  'special-pfc': SPECIAL_PFC,
+  'special-sulfur-hexafluoride': SPECIAL_SULFUR_HEXAFLUORIDE,
   'special-methane': SPECIAL_METHANE,
 };
+
+const LOADED_TOKEN_IMAGE_CACHE = new Object();
+
+function loadTokenImages() {
+  for (const key in TOKEN_TO_IMAGE_PATH_MAP) {
+    const tokenImage = new Image();
+    tokenImage.src = TOKEN_TO_IMAGE_PATH_MAP[key];
+    LOADED_TOKEN_IMAGE_CACHE[key] = tokenImage;
+  }
+}
+
+function getTokenImage(name) {
+  if (name in LOADED_TOKEN_IMAGE_CACHE) {
+    return LOADED_TOKEN_IMAGE_CACHE[name];
+  }
+  else {
+    const tokenImage = new Image();
+    tokenImage.src = TOKEN_TO_IMAGE_PATH_MAP[name];
+    LOADED_TOKEN_IMAGE_CACHE[name] = tokenImage;
+    return tokenImage;
+  }
+}
+
 
 function computeRow(game, gameCanvasHeight, offsetY) {
   return Math.floor(offsetY * game.getBoardHeight() / gameCanvasHeight);
@@ -53,7 +76,6 @@ function tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffs
   const gameCanvasHeight = bottom - top;
   const tokenWidth = gameCanvasWidth / game.getBoardWidth();
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
-  
   actionCtx.drawImage(tokenImage, prevX - initialXOffset, prevY - initialYOffset, tokenWidth, tokenHeight);
 
   function tokenMoveCallback(e) {
@@ -129,8 +151,7 @@ function dropTokenAnimation(game) {
           const currentY = distanceTravelled * tokenDropRate + colTokenSquares[row].row * tokenHeight;
           gameCtx.clearRect(currentX, currentY, tokenWidth, tokenHeight);
           colDestinationSquares[row] -= 1;
-          const tokenImage = new Image();
-          tokenImage.src = TOKEN_TO_IMAGE_MAP[colTokenSquares[row].name];
+          const tokenImage = getTokenImage(colTokenSquares[row].name);
           gameCtx.drawImage(tokenImage, currentX, currentY + tokenDropRate, tokenWidth, tokenHeight);
           completed = false;
         }
@@ -141,11 +162,10 @@ function dropTokenAnimation(game) {
       for (let i = 0; i < colGeneratedTokens.length; i++) {
         if (colGeneratedTokenDistance[i] < totalDistanceTravelled) {
           const distanceTravelled = colGeneratedTokenDistance[i];
-          const currentY = -(colGeneratedTokens.length - i)*tokenHeight + distanceTravelled*tokenDropRate;
+          const currentY = -(colGeneratedTokens.length - i) * tokenHeight + distanceTravelled * tokenDropRate;
           gameCtx.clearRect(currentX, currentY, tokenWidth, tokenHeight);
           colGeneratedTokenDistance[i] += 1;
-          const tokenImage = new Image();
-          tokenImage.src = TOKEN_TO_IMAGE_MAP[colGeneratedTokens[i].name];
+          const tokenImage = getTokenImage(colGeneratedTokens[i].name);
           gameCtx.drawImage(tokenImage, currentX, currentY + tokenDropRate, tokenWidth, tokenHeight);
           completed = false;
         }
@@ -197,7 +217,6 @@ function captureTokenAnimation(game) {
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
   const capturedTokens = game.findCapturedTokens();
   const quadrupletCapturedTokens = game.findQuadrupletCapturedTokens();
-  console.log(quadrupletCapturedTokens);
   for (const token of capturedTokens) {
     const { row, col } = token;
     game.captureToken(row, col);
@@ -205,7 +224,6 @@ function captureTokenAnimation(game) {
   }
   for (let i = 0; i < quadrupletCapturedTokens.length; i++) {
     const tokenSet = quadrupletCapturedTokens[i];
-    console.log(tokenSet.length);
     let randToken = tokenSet[Math.floor(Math.random() * tokenSet.length)];
     let { row, col } = randToken;
     while (!game.isEmptySquare(row, col)) {
@@ -215,11 +233,8 @@ function captureTokenAnimation(game) {
     }
     const specialToken = new Token(`special-${randToken.name}`, row, col, true);
     game.setBoardSquare(specialToken, row, col);
-    const tokenImage = new Image();
-    tokenImage.src = TOKEN_TO_IMAGE_MAP[specialToken.name];
-    tokenImage.onload = function() {
-      gameCtx.drawImage(tokenImage, col * tokenWidth, row * tokenHeight, tokenWidth, tokenHeight);
-    }
+    const tokenImage = getTokenImage(specialToken.name);
+    gameCtx.drawImage(tokenImage, col * tokenWidth, row * tokenHeight, tokenWidth, tokenHeight);
   }
   actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
   const sidebarScore = document.getElementById("sidebar-score");
@@ -229,7 +244,7 @@ function captureTokenAnimation(game) {
   dropTokenAnimation(game);
 }
 
-function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, col1, setScore) {
+function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, col1) {
   const gameCanvas = document.getElementById("gameboard-canvas");
   const gameCtx = gameCanvas.getContext("2d");
   const actionCanvas = document.getElementById('action-canvas');
@@ -267,13 +282,14 @@ function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, co
     if (numFrames >= numAnimationFrames) {
       gameCtx.drawImage(tokenImage1, prev1col - left, prev1row - top, tokenWidth, tokenHeight);
       actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
-      captureTokenAnimation(game, setScore);
+      captureTokenAnimation(game);
       return;
     }
     gameCtx.clearRect(prev0col, prev0row, tokenWidth, tokenHeight);
     actionCtx.clearRect(prev1col, prev1row, tokenWidth, tokenHeight);
     gameCtx.drawImage(tokenImage0, next0col, next0row, tokenWidth, tokenHeight);
     actionCtx.drawImage(tokenImage1, next1col, next1row, tokenWidth, tokenHeight);
+
     prev0row = next0row;
     prev0col = next0col;
     prev1row = next1row;
@@ -288,7 +304,7 @@ function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, co
   window.requestAnimationFrame(flipTokenAnimationStep);
 }
 
-function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback, setScore) {
+function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback) {
   const gameCanvas = document.getElementById("gameboard-canvas");
   const gameCtx = gameCanvas.getContext("2d");
   const actionCanvas = document.getElementById('action-canvas');
@@ -314,16 +330,14 @@ function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback,
       if ((Math.abs(row1 - token.row) + Math.abs(col1 - token.col) === 1)) {
         const row0 = token.row;
         const col0 = token.col;
-        const tokenImage0 = new Image();
-        const tokenImage1 = new Image();
         const tokenName0 = token.name;
         const tokenName1 = game.getToken(row1, col1).name;
-        tokenImage0.src = TOKEN_TO_IMAGE_MAP[tokenName0];
-        tokenImage1.src = TOKEN_TO_IMAGE_MAP[tokenName1];
+        const tokenImage0 = getTokenImage(tokenName0);
+        const tokenImage1 = getTokenImage(tokenName1);
         game.flipTokens(token.row, token.col, row1, col1);
         const capturedTokens = game.findCapturedTokens();
         if (capturedTokens.length !== 0) {
-          flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, col1, setScore);
+          flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, col1);
         }
         else {
           game.flipTokens(row1, col1, row0, col0);
@@ -336,12 +350,11 @@ function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback,
         actionCanvas.style.display = 'none';
       }
     }
-    return tokenMouseUpCallback;
   }
   return tokenMouseUpCallback;
 }
 
-function tokenMouseDownCallbackFactory(game, setScore) {
+function tokenMouseDownCallbackFactory(game) {
   const gameCanvas = document.getElementById("gameboard-canvas");
   const gameCtx = gameCanvas.getContext("2d");
   const actionCanvas = document.getElementById('action-canvas');
@@ -363,12 +376,11 @@ function tokenMouseDownCallbackFactory(game, setScore) {
     const token = game.getToken(row, col);
     const mouseX = left  + offsetX;
     const mouseY = top + offsetY;
-    const tokenImage = new Image();
-    tokenImage.src = TOKEN_TO_IMAGE_MAP[token.name];
+    const tokenImage = getTokenImage(token.name);
     actionCanvas.style.display = 'block';
     const tokenMoveCallback = tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffset, mouseX, mouseY);
     actionCanvas.addEventListener('mousemove', tokenMoveCallback);
-    const tokenMouseUpCallback = tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback, setScore);
+    const tokenMouseUpCallback = tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback);
     actionCanvas.addEventListener('mouseup', tokenMouseUpCallback);
     mouseUpEventListener = tokenMouseUpCallback;
   }
@@ -377,7 +389,7 @@ function tokenMouseDownCallbackFactory(game, setScore) {
 
 
 function Gameboard(props) {  
-  const { game, setScore } = props;
+  const { game } = props;
   useEffect(() => {
     const gameCanvas = document.getElementById("gameboard-canvas");
     const gameCtx = gameCanvas.getContext("2d");
@@ -393,14 +405,11 @@ function Gameboard(props) {
           continue;
         }
         const token = game.getToken(row, col);
-        let tokenImage = new Image();
-        tokenImage.src = TOKEN_TO_IMAGE_MAP[token.name];
-        tokenImage.onload = function() {
-          gameCtx.drawImage(tokenImage, token.col * tokenWidth, token.row * tokenHeight, tokenWidth, tokenHeight);
-        }
+        let tokenImage = getTokenImage(token.name);
+        gameCtx.drawImage(tokenImage, token.col * tokenWidth, token.row * tokenHeight, tokenWidth, tokenHeight);
       }
     }
-    gameCanvas.addEventListener('mousedown', tokenMouseDownCallbackFactory(game, setScore));
+    gameCanvas.addEventListener('mousedown', tokenMouseDownCallbackFactory(game));
   });
 
   return (

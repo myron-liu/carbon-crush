@@ -13,12 +13,14 @@
   color: #FFFFFF;
   border-color: none;
   border-radius: 10px;
+  z-index: 4;
 }
 
 .sidebar-new-game-button:hover {
   background-color: #FFFFFF;
   color: #000000;
   border-color: #000000;
+  z-index: 4;
 }
 
 .sidebar-score {

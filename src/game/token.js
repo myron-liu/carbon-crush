@@ -16,9 +16,9 @@ export const DEFAULT_TOKENS = {
   regularTokens: [
     'carbon-dioxide',
     'nitrous-oxide',
-    'hydrogen-dioxide',
-    'ozone',
-    'dichlorodifluoromethane',
+    'pfc',
+    'cfc',
+    'sulfur-hexafluoride',
     'methane'
   ]
 };
