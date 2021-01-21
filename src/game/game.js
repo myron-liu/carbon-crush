@@ -213,13 +213,13 @@ export class Game {
   spawnToken(row, col) {
     const { regularTokens } = this.tokenSet;
     const tokenName = regularTokens[Math.floor(Math.random() * regularTokens.length)];
-    return new Token(tokenName, row, col, false);
+    return new Token(tokenName, row, col, false, false);
   }
 
   generateToken() {
     const { regularTokens } = this.tokenSet;
     const tokenName = regularTokens[Math.floor(Math.random() * regularTokens.length)];
-    return new Token(tokenName, null, null, false);
+    return new Token(tokenName, null, null, false, false);
   }
 
   findCapturedTokens() {
@@ -293,6 +293,114 @@ export class Game {
 
     if (!hasTop && hasVerticalQuadruplet) {
       tokenSet.push([token, bottomToken, secondBottomToken, thirdBottomToken]);
+    }
+    return tokenSet;
+  }
+
+  getAllTokensOfType(token) {
+    const tokens = new Set();
+    for (let row = 0; row < this.boardHeight; row++) {
+      for (let col = 0; col < this.boardWidth; col++) {
+        const secondToken = this.getToken(row, col);
+        const { name } = secondToken;
+        if (this.isTokenMatch(token.name, name) || token.isBomb) {
+          tokens.add(secondToken);
+          if (secondToken.isSpecial) {
+            for (let x = 0; x < this.boardWidth; x++) {
+              secondToken = this.getToken(row, x);
+              tokens.add(secondToken);
+            }
+          }
+        }
+      }
+    }
+    return Array.from(tokens);
+  }
+
+  findBombCapturedTokens() {
+    const tokens = [];
+    for (let row = 0; row < this.boardHeight; row++) {
+      for (let col = 0; col < this.boardWidth; col++) {
+        let token = this.getToken(row, col);
+        const bombTokens = this.detectQuintupletCapture(token);
+        if (bombTokens.length > 0) {
+          bombTokens.forEach(t => tokens.push(t));
+        }
+      }
+    }
+    return tokens;
+  }
+
+  detectQuintupletCapture(token) {
+    const { row, col, name } = token;
+    const tokenSet = [];
+    
+    const leftToken = this.isValidLocation(row, col - 1) ? this.getToken(row, col - 1) : null;
+    const rightToken = this.isValidLocation(row, col + 1) ? this.getToken(row, col + 1) : null;
+    const secondRightToken = this.isValidLocation(row, col + 2) ? this.getToken(row, col + 2) : null;
+    const thirdRightToken = this.isValidLocation(row, col + 3) ? this.getToken(row, col + 3) : null;
+    const fourthRightToken = this.isValidLocation(row, col + 4) ? this.getToken(row, col + 4) : null;
+    const fifthRightToken = this.isValidLocation(row, col + 5) ? this.getToken(row, col + 5) : null;
+    const sixthRightToken = this.isValidLocation(row, col + 6) ? this.getToken(row, col + 6) : null;
+    const seventhRightToken = this.isValidLocation(row, col + 7) ? this.getToken(row, col + 7) : null;
+
+    const rightTokenMatch = rightToken !== null && this.isTokenMatch(name, rightToken.name);
+    const secondRightTokenMatch = secondRightToken !== null && this.isTokenMatch(name, secondRightToken.name);
+    const thirdRightTokenMatch = thirdRightToken !== null && this.isTokenMatch(name, thirdRightToken.name);
+    const fourthRightTokenMatch = fourthRightToken !== null && this.isTokenMatch(name, fourthRightToken.name);
+    const fifthRightTokenMatch = fifthRightToken !== null && this.isTokenMatch(name, fifthRightToken.name);
+    const sixthRightTokenMatch = sixthRightToken !== null && this.isTokenMatch(name, sixthRightToken.name);
+    const seventhRightTokenMatch = seventhRightToken !== null && this.isTokenMatch(name, seventhRightToken.name);
+
+    const hasLeft = leftToken !== null && this.isTokenMatch(name, leftToken.name);
+    const hasHorizontalQuintuple = rightTokenMatch && secondRightTokenMatch && thirdRightTokenMatch && fourthRightTokenMatch;
+
+    if (!hasLeft && hasHorizontalQuintuple) {
+      const horizontalTokens = [token, rightToken, secondRightToken, thirdRightToken, fourthRightToken];
+      if (fifthRightTokenMatch) {
+        horizontalTokens.push(fifthRightToken);
+      }
+      if (sixthRightTokenMatch) {
+        horizontalTokens.push(sixthRightToken)
+      }
+      if (seventhRightTokenMatch) {
+        horizontalTokens.push(seventhRightToken);
+      }
+      tokenSet.push(horizontalTokens);
+    }
+
+    const topToken = this.isValidLocation(row - 1, col) ? this.getToken(row - 1, col) : null;
+    const bottomToken = this.isValidLocation(row + 1, col) ? this.getToken(row + 1, col) : null;
+    const secondBottomToken = this.isValidLocation(row + 2, col) ? this.getToken(row + 2, col) : null;
+    const thirdBottomToken = this.isValidLocation(row + 3, col) ? this.getToken(row + 3, col) : null;
+    const fourthBottomToken = this.isValidLocation(row + 4, col) ? this.getToken(row + 4, col) : null;
+    const fifthBottomToken = this.isValidLocation(row + 5, col) ? this.getToken(row + 5, col) : null;
+    const sixthBottomToken = this.isValidLocation(row + 6, col) ? this.getToken(row + 6, col) : null;
+    const seventhBottomToken = this.isValidLocation(row + 7, col) ? this.getToken(row + 7, col) : null;
+
+    const bottomTokenMatch = bottomToken !== null && this.isTokenMatch(name, bottomToken.name);
+    const secondBottomTokenMatch = secondBottomToken !== null && this.isTokenMatch(name, secondBottomToken.name);
+    const thirdBottomTokenMatch = thirdBottomToken !== null && this.isTokenMatch(name, thirdBottomToken.name);
+    const fourthBottomTokenMatch = fourthBottomToken !== null && this.isTokenMatch(name, fourthBottomToken.name);
+    const fifthBottomTokenMatch = fifthBottomToken !== null && this.isTokenMatch(name, fifthBottomToken.name);
+    const sixthBottomTokenMatch = sixthBottomToken !== null && this.isTokenMatch(name, sixthBottomToken.name);
+    const seventhBottomTokenMatch = seventhBottomToken !== null && this.isTokenMatch(name, seventhBottomToken.name);
+
+    const hasTop = topToken !== null && this.isTokenMatch(name, topToken.name);
+    const hasVerticalQuintuple = bottomTokenMatch && secondBottomTokenMatch && thirdBottomTokenMatch && fourthBottomTokenMatch;
+
+    if (!hasTop && hasVerticalQuintuple) {
+      const verticalTokens = [token, bottomToken, secondBottomToken, thirdBottomToken, fourthBottomToken];
+      if (fifthBottomTokenMatch) {
+        verticalTokens.push(fifthBottomToken);
+      }
+      if (sixthBottomTokenMatch) {
+        verticalTokens.push(sixthBottomToken)
+      }
+      if (seventhBottomTokenMatch) {
+        verticalTokens.push(seventhBottomToken);
+      }
+      tokenSet.push(verticalTokens);
     }
     return tokenSet;
   }
