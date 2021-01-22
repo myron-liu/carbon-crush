@@ -307,8 +307,8 @@ export class Game {
           tokens.add(secondToken);
           if (secondToken.isSpecial) {
             for (let x = 0; x < this.boardWidth; x++) {
-              secondToken = this.getToken(row, x);
-              tokens.add(secondToken);
+              const nextToken = this.getToken(row, x);
+              tokens.add(nextToken);
             }
           }
         }

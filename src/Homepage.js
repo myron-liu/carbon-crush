@@ -9,12 +9,18 @@ import { useState } from 'react';
 function Homepage() {
   const [gameState, setGameState] = useState(
     new Game(DEFAULT_WIDTH, DEFAULT_HEIGHT, { regularTokens: DEFAULT_TOKENS.regularTokens }));
+  const [shouldShowTimerState, setShouldShowTimerState] = useState(false);
+  const [seconds, setSeconds] = useState(365);
   return (
     <main className="homepage">
       <section className="homepage-menu">
         <h1 className="homepage-title">Carbon Crush</h1>
         <p className="homepage-subtitle">Sequestrate those greenhouse gases!</p>
-        <Sidebar score={gameState.getBoardScore()} newGameCallback={() => {
+        <Sidebar 
+        score={gameState.getBoardScore()} 
+        seconds={seconds} 
+        setSeconds={setSeconds} 
+        showTimer={shouldShowTimerState} newGameCallback={() => {
           const gameCanvas = document.getElementById("gameboard-canvas");
           const gameCtx = gameCanvas.getContext("2d");
           const actionCanvas = document.getElementById("action-canvas");
@@ -27,6 +33,8 @@ function Homepage() {
           actionCanvas.parentNode.replaceChild(actionCanvasClone, actionCanvas);
           actionCanvas.style.display = 'none';
           setGameState(new Game(DEFAULT_WIDTH, DEFAULT_HEIGHT, { regularTokens: DEFAULT_TOKENS.regularTokens }));
+          setShouldShowTimerState(true);
+          setSeconds(365);
           const sidebarScore = document.querySelector('.sidebar-score');
           if (sidebarScore) {
             gameState.setBoardScore(0);

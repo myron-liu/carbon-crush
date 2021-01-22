@@ -28,3 +28,14 @@
   padding-top: 10px;
   font-size: 22px;
 }
+
+.timer {
+  margin-top: 20px;
+  padding-top: 20px;
+  font-size: 24px;
+  color: '#FFFFFF';
+}
+
+.timer-red {
+  color: red;
+}

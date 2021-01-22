@@ -15,6 +15,7 @@
   'special-pfc': 16,
   'special-cfc': 18,
   'special-sulfur-hexafluoride': 20,
+  'carbon-bomb': 100,
  };
 
 export class Token {
