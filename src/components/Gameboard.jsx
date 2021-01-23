@@ -94,6 +94,7 @@ function tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffs
   function tokenMoveCallback(e) {
     let { offsetX, offsetY } = e;
     if (e.type === "touchmove") {
+      e.preventDefault();
       let rect = e.target.getBoundingClientRect();
       offsetX = e.targetTouches[0].pageX - rect.left;
       offsetY = e.targetTouches[0].pageY - rect.top;
@@ -381,7 +382,13 @@ function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback)
     if (touchEndEventListener !== null) {
       actionCanvas.removeEventListener('touchend', touchEndEventListener);
     }
-    const { offsetX, offsetY } = e;
+    let { offsetX, offsetY } = e;
+    if (e.type === "touchend") {
+      e.preventDefault();
+      let rect = e.target.getBoundingClientRect();
+      offsetX = e.changedTouches[0].pageX - rect.left;
+      offsetY = e.changedTouches[0].pageY - rect.top;
+    }
     if (offsetX >= left && offsetX <= left + gameCanvasWidth 
       && offsetY >= top && offsetY <= top + gameCanvasHeight)
     {
@@ -438,9 +445,9 @@ function tokenMouseDownCallbackFactory(game) {
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
 
   function tokenMouseDownCallback(e) {
-    
     let { offsetX, offsetY } = e;
     if (e.type === "touchstart") {
+      e.preventDefault();
       let rect = e.target.getBoundingClientRect();
       offsetX = e.targetTouches[0].pageX - rect.left;
       offsetY = e.targetTouches[0].pageY - rect.top;
