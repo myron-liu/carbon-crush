@@ -448,6 +448,6 @@ export class Game {
   }
 
   isTokenMatch(name, secondName) {
-    return name === secondName || `special-${name}` == secondName || name === `special-${secondName}`;
+    return name === secondName || `special-${name}` === secondName || name === `special-${secondName}`;
   }
 }

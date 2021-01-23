@@ -14,8 +14,10 @@ function Homepage() {
   return (
     <main className="homepage">
       <section className="homepage-menu">
-        <h1 className="homepage-title">Carbon Crush</h1>
-        <p className="homepage-subtitle">Sequestrate those greenhouse gases!</p>
+        <section className="homepage-header">
+          <h1 className="homepage-title">Carbon Crush</h1>
+          <p className="homepage-subtitle">Sequestrate those greenhouse gases!</p>
+        </section>
         <Sidebar 
         score={gameState.getBoardScore()} 
         seconds={seconds} 
@@ -23,10 +25,16 @@ function Homepage() {
         showTimer={shouldShowTimerState} newGameCallback={() => {
           const gameCanvas = document.getElementById("gameboard-canvas");
           const gameCtx = gameCanvas.getContext("2d");
+          let { left, right, top, bottom } = gameCanvas.getBoundingClientRect();
+          const gameCanvasWidth = right - left;
+          const gameCanvasHeight = bottom - top;
           const actionCanvas = document.getElementById("action-canvas");
           const actionCtx = actionCanvas.getContext("2d");
-          actionCtx.clearRect(0, 0, actionCanvas.innerWidth, actionCanvas.innerHeight);
-          gameCtx.clearRect(0, 0, gameCanvas.innerWidth, gameCanvas.innerHeight);
+          ({ left, right, top, bottom } = actionCanvas.getBoundingClientRect());
+          const actionCanvasWidth = right - left;
+          const actionCanvasHeight = bottom - top
+          actionCtx.clearRect(0, 0, actionCanvasWidth, actionCanvasHeight);
+          gameCtx.clearRect(0, 0, gameCanvasWidth, gameCanvasHeight);
           const gameCanvasClone = gameCanvas.cloneNode(true);
           const actionCanvasClone = actionCanvas.cloneNode(true);
           gameCanvas.parentNode.replaceChild(gameCanvasClone, gameCanvas);

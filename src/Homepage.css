@@ -2,6 +2,32 @@
   overflow: hidden;
 }
 
+.homepage-gameboard {
+  position: relative;
+  left: 27.5vw;
+  top: -95vh;
+  height: 0;
+  display: block;
+}
+
+.gameboard-canvas {
+  background-color: #C9E0F1;
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  display: block;
+  height: 900px;
+  width: 900px;
+}
+
+.action-canvas {
+  background-color: transparent;
+  z-index: 2;
+  position: absolute;
+  top: 0;
+  display: none;
+}
+
 .homepage-menu {
   width: 25vw;
   height: 80vh;
@@ -16,4 +42,119 @@
 .homepage-subtitle {
   font-size: 22px;
   text-align: center;
+}
+
+.homepage-sidebar {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.sidebar-new-game-button {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  font-size: 18px;
+  width: 200px;
+  height: 50px;
+  background-color: #000000;
+  color: #FFFFFF;
+  border-color: none;
+  border-radius: 10px;
+  z-index: 4;
+}
+
+.sidebar-new-game-button:hover {
+  background-color: #FFFFFF;
+  color: #000000;
+  border-color: #000000;
+  z-index: 4;
+}
+
+.sidebar-score {
+  margin-top: 10px;
+  padding-top: 10px;
+  font-size: 22px;
+}
+
+.timer {
+  margin-top: 20px;
+  padding-top: 20px;
+  font-size: 24px;
+  color: '#FFFFFF';
+}
+
+.timer-red {
+  color: red;
+}
+
+@media (max-width: 768px) {
+  .homepage-menu {
+    width: 100vw;
+    height: 15vh;
+    margin-top: 0vh;
+    display: flex;
+  }
+
+  .homepage-header {
+    display: flex;
+    flex-direction: column;
+    max-width: 35vw;
+  }
+
+  .homepage-title {
+    text-align: left;
+    font-size: 34px;
+    margin-left: 2vw;
+  }
+
+  .homepage-subtitle {
+    text-align: left;
+    font-size: 20px;
+    position: relative;
+    top: -40px;
+    margin-left: 4vw;
+  }
+
+  .homepage-sidebar {
+    text-align: center;
+    position: relative;
+    top: 40px;
+    margin-top: 0px;
+    display: flex;
+    flex-direction: row;
+    margin-left: 2vw;
+  }
+
+  .homepage-sidebar-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-score {
+    margin-top: 0px;
+    padding-top: 0px;
+  }
+
+  .timer {
+    font-size: 24px;
+    max-width: 22vw;
+    position: relative;
+    top: -40px;
+    margin-left: 60px;
+  }
+
+  .homepage-gameboard {
+    display: flex;
+    left: 0;
+    width: 0;
+    top: 0;
+    height: 75vh;
+  }
+
+  .gameboard-canvas {
+    display: flex;
+    position: relative;
+    left: 0;
+    top: 0;
+    height: 100%;
+  }
 }

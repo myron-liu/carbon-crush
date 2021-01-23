@@ -17,8 +17,17 @@ import { useLayoutEffect, useRef } from 'react';
 
 let windowWidth = window.innerWidth;
 let windowHeight = window.innerHeight;
-let canvasWidth = Math.min(windowWidth * 0.72, windowHeight) * 0.90;
+
+let canvasWidth = 900;
+let canvasHeight = 900;
+
+if (windowWidth <= 768) {
+  canvasWidth = Math.min(windowWidth, windowHeight);
+  canvasHeight = Math.min(windowWidth, windowHeight);
+}
+
 let mouseUpEventListener = null;
+let touchEndEventListener = null;
 
 const TOKEN_TO_IMAGE_PATH_MAP = {
   'carbon-dioxide': CARBON_DIOXIDE,
@@ -36,7 +45,7 @@ const TOKEN_TO_IMAGE_PATH_MAP = {
   'carbon-bomb': CARBON_BOMB,
 };
 
-const LOADED_TOKEN_IMAGE_CACHE = new Object();
+const LOADED_TOKEN_IMAGE_CACHE = {};
 
 
 function loadTokenImages() {
@@ -83,7 +92,12 @@ function tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffs
   actionCtx.drawImage(tokenImage, prevX - initialXOffset, prevY - initialYOffset, tokenWidth, tokenHeight);
 
   function tokenMoveCallback(e) {
-    const { offsetX, offsetY } = e;
+    let { offsetX, offsetY } = e;
+    if (e.type === "touchmove") {
+      let rect = e.target.getBoundingClientRect();
+      offsetX = e.targetTouches[0].pageX - rect.left;
+      offsetY = e.targetTouches[0].pageY - rect.top;
+    }
     actionCtx.clearRect(prevX - initialXOffset, prevY - initialYOffset, actionCanvas.width, actionCanvas.height);
     prevX = offsetX;
     prevY = offsetY;
@@ -222,7 +236,6 @@ function captureTokenAnimation(game) {
   const capturedTokens = game.findCapturedTokens();
   const quadrupletCapturedTokens = game.findQuadrupletCapturedTokens();
   const bombCapturedTokens = game.findBombCapturedTokens();
-  console.log(bombCapturedTokens);
   for (const token of capturedTokens) {
     const { row, col } = token;
     game.captureToken(row, col);
@@ -328,7 +341,6 @@ function bombTokenAnimation(game, bombToken, token) {
   const gameCanvas = document.getElementById("gameboard-canvas");
   const gameCtx = gameCanvas.getContext("2d");
   const tokens = game.getAllTokensOfType(token);
-  console.log(tokens);
   let { left, right, top, bottom } = gameCanvas.getBoundingClientRect();
   const gameCanvasWidth = right - left;
   const gameCanvasHeight = bottom - top;
@@ -360,10 +372,14 @@ function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback)
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
   function tokenMouseUpCallback(e) {
     actionCanvas.removeEventListener('mousemove', tokenMoveCallback);
+    actionCanvas.removeEventListener('touchmove', tokenMoveCallback);
     actionCtx.clearRect(0, 0, actionCanvas.clientWidth, actionCanvas.clientHeight);
     gameCtx.drawImage(tokenImage, token.col * tokenWidth, token.row * tokenHeight, tokenWidth, tokenHeight);
     if (mouseUpEventListener !== null) {
       actionCanvas.removeEventListener('mouseup', mouseUpEventListener);
+    }
+    if (touchEndEventListener !== null) {
+      actionCanvas.removeEventListener('touchend', touchEndEventListener);
     }
     const { offsetX, offsetY } = e;
     if (offsetX >= left && offsetX <= left + gameCanvasWidth 
@@ -415,7 +431,6 @@ function tokenMouseDownCallbackFactory(game) {
   const gameCanvas = document.getElementById("gameboard-canvas");
   const gameCtx = gameCanvas.getContext("2d");
   const actionCanvas = document.getElementById('action-canvas');
-  const actionCtx = actionCanvas.getContext('2d');
   const { left, right, top, bottom } = gameCanvas.getBoundingClientRect();
   const gameCanvasWidth = right - left;
   const gameCanvasHeight = bottom - top;
@@ -423,7 +438,13 @@ function tokenMouseDownCallbackFactory(game) {
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
 
   function tokenMouseDownCallback(e) {
-    const { offsetX, offsetY } = e;
+    
+    let { offsetX, offsetY } = e;
+    if (e.type === "touchstart") {
+      let rect = e.target.getBoundingClientRect();
+      offsetX = e.targetTouches[0].pageX - rect.left;
+      offsetY = e.targetTouches[0].pageY - rect.top;
+    }
     const col = computeCol(game, gameCanvasWidth, offsetX);
     const row = computeRow(game, gameCanvasHeight, offsetY);
     const initialYOffset = offsetY - row * tokenHeight;
@@ -436,10 +457,18 @@ function tokenMouseDownCallbackFactory(game) {
     const tokenImage = getTokenImage(token.name);
     actionCanvas.style.display = 'block';
     const tokenMoveCallback = tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffset, mouseX, mouseY);
-    actionCanvas.addEventListener('mousemove', tokenMoveCallback);
-    const tokenMouseUpCallback = tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback);
-    actionCanvas.addEventListener('mouseup', tokenMouseUpCallback);
-    mouseUpEventListener = tokenMouseUpCallback;
+    if (e.type === "mousedown") {
+      actionCanvas.addEventListener('mousemove', tokenMoveCallback);
+      const tokenMouseUpCallback = tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback);
+      actionCanvas.addEventListener('mouseup', tokenMouseUpCallback);
+      mouseUpEventListener = tokenMouseUpCallback;
+    }
+    else if (e.type === "touchstart") {
+      actionCanvas.addEventListener('touchmove', tokenMoveCallback);
+      const tokenMouseUpCallback = tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback);
+      actionCanvas.addEventListener('touchend', tokenMouseUpCallback);
+      touchEndEventListener = tokenMouseUpCallback;
+    }
   }
   return tokenMouseDownCallback;
 }
@@ -472,12 +501,13 @@ function Gameboard(props) {
       }
     }
     gameCanvas.addEventListener('mousedown', tokenMouseDownCallbackFactory(game));
+    gameCanvas.addEventListener('touchstart', tokenMouseDownCallbackFactory(game));
   }, [game]);
 
   return (
     <>
       <section className="homepage-gameboard">
-        <canvas id="gameboard-canvas" className="gameboard-canvas" width={canvasWidth} height={canvasWidth} />
+        <canvas id="gameboard-canvas" className="gameboard-canvas" width={canvasWidth} height={canvasHeight}/>
       </section>
       <canvas id="action-canvas" className="action-canvas" width={windowWidth} height={windowHeight} />
     </>
