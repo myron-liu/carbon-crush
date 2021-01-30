@@ -38,6 +38,14 @@ export const DEFAULT_TOKENS = {
     'cfc',
     'sulfur-hexafluoride',
     'methane'
+  ],
+  specialTokens: [
+    'special-carbon-dioxide',
+    'special-nitrous-oxide',
+    'special-pfc',
+    'special-cfc',
+    'special-sulfur-hexafluoride',
+    'special-methane'
   ]
 };
 

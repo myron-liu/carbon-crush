@@ -1,4 +1,4 @@
-import { Token } from './token.js';
+import { DEFAULT_TOKENS, Token } from './token.js';
 
 /**
  * Game is the coordinator for the gameboard and scoreboard. A gameboard is an array of arrays.
@@ -37,18 +37,28 @@ function boardConstructorPreconditions(width, height) {
 }
 
 export class Game {
-  constructor(width, height, tokenSet) {
+  constructor(width, height, tokenSet, addTimeCallback) {
     try {
       boardConstructorPreconditions(width, height);
     }
     catch (err) {
       console.error(err);
     }
+    this.addTimeCallback = addTimeCallback.bind(this);
     this.boardWidth = width;
     this.boardHeight = height;
     this.boardScore = 0;
     this.boardSquares = new Array(this.boardHeight);
     this.tokenSet = tokenSet;
+    this.captureCount = {};
+    const { regularTokens, specialTokens } = DEFAULT_TOKENS;
+    for (let i = 0; i < regularTokens.length; i++) {
+      this.captureCount[regularTokens[i]] = 0;
+    }
+    for (let i = 0; i < specialTokens.length; i++) {
+      this.captureCount[specialTokens[i]] = 0;
+    }
+    this.captureCount['carbon-bomb'] = 0;
 
     // initialize an empty board
     for (let row = 0; row < this.boardHeight; row++) {
@@ -109,6 +119,10 @@ export class Game {
     this.boardScore = 0;
   }
 
+  getCaptureCount(name) {
+    return this.captureCount[name];
+  }
+
   /**
    * Returns true if the row and column identify a valid square on the board.
    * @param {*number} row - row value (indexed from 0 - starting from top left going right)
@@ -155,7 +169,13 @@ export class Game {
     if (!this.isValidLocation(row, col)) {
       throw new Error(`Invalid location, got row: ${row}, col: ${col}`);
     }
-    this.boardScore += this.boardSquares[row][col].value;
+    const token = this.boardSquares[row][col];
+    if (token.isSpecial) {
+      console.log(10);
+      this.addTimeCallback(10);
+    }
+    this.captureCount[token.name] += 1;
+    this.boardScore += token.value;
     this.boardSquares[row][col] = null;
   }
 

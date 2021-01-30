@@ -1,4 +1,6 @@
 import './Gameboard.css';
+import { DEFAULT_TOKENS } from '../game/token.js';
+import { Game, DEFAULT_WIDTH, DEFAULT_HEIGHT } from '../game/game.js';
 import CARBON_DIOXIDE from '../assets/carbon-dioxide.png';
 import CFC from '../assets/cfc.png';
 import PFC from '../assets/pfc.png';
@@ -15,21 +17,11 @@ import CARBON_BOMB from '../assets/carbon-bomb.png';
 import { Token } from '../game/token.js';
 import { useLayoutEffect, useRef } from 'react';
 
-let windowWidth = window.innerWidth;
-let windowHeight = window.innerHeight;
-
-let canvasWidth = 900;
-let canvasHeight = 900;
-
-if (windowWidth <= 768) {
-  canvasWidth = Math.min(windowWidth, windowHeight);
-  canvasHeight = Math.min(windowWidth, windowHeight);
-}
 
 let mouseUpEventListener = null;
 let touchEndEventListener = null;
 
-const TOKEN_TO_IMAGE_PATH_MAP = {
+export const TOKEN_TO_IMAGE_PATH_MAP = {
   'carbon-dioxide': CARBON_DIOXIDE,
   'nitrous-oxide': NITROUS_OXIDE,
   'cfc': CFC,
@@ -218,6 +210,7 @@ function dropTokenAnimation(game) {
       }
       else {
         actionCanvas.style.display = 'none';
+        actionCanvas.style.zIndex = -1;
       }
     }
   }
@@ -271,9 +264,9 @@ function captureTokenAnimation(game) {
     gameCtx.drawImage(tokenImage, col * tokenWidth, row * tokenHeight, tokenWidth, tokenHeight);
   }
   actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
-  const sidebarScore = document.getElementById("sidebar-score");
+  const sidebarScore = document.getElementById("score-value");
   if (sidebarScore) {
-    sidebarScore.innerHTML = `Score: ${game.getBoardScore()}`;
+    sidebarScore.innerHTML = `${game.getBoardScore()}`;
   }
   dropTokenAnimation(game);
 }
@@ -296,7 +289,7 @@ function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, co
   const numAnimationFrames = 10;
   const animationIncrementCol = (token1col - token0col) / numAnimationFrames;
   const animationIncrementRow = (token1row - token0row) / numAnimationFrames;
-
+  actionCanvas.style.zIndex = 3;
   actionCanvas.style.display = 'block';
   gameCtx.clearRect(token0col, token0row, tokenWidth, tokenHeight);
   gameCtx.clearRect(token1col, token1row, tokenWidth, tokenHeight);
@@ -422,11 +415,13 @@ function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback)
         else {
           game.flipTokens(row1, col1, row0, col0);
           actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
+          actionCanvas.style.zIndex = -1;
           actionCanvas.style.display = 'none';
         }
       }
       else {
         actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
+        actionCanvas.style.zIndex = -1;
         actionCanvas.style.display = 'none';
       }
     }
@@ -462,6 +457,7 @@ function tokenMouseDownCallbackFactory(game) {
     const mouseX = left  + offsetX;
     const mouseY = top + offsetY;
     const tokenImage = getTokenImage(token.name);
+    actionCanvas.style.zIndex = 3;
     actionCanvas.style.display = 'block';
     const tokenMoveCallback = tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffset, mouseX, mouseY);
     if (e.type === "mousedown") {
@@ -479,10 +475,40 @@ function tokenMouseDownCallbackFactory(game) {
   }
   return tokenMouseDownCallback;
 }
+function newGameCallbackFactory(setGameState, gameState, setSeconds, startSeconds, setActiveTimer, addTimeCallback) {
+    function newGameCallback() {
+    const gameCanvas = document.getElementById("gameboard-canvas");
+    const gameCtx = gameCanvas.getContext("2d");
+    let { left, right, top, bottom } = gameCanvas.getBoundingClientRect();
+    const gameCanvasWidth = right - left;
+    const gameCanvasHeight = bottom - top;
+    const actionCanvas = document.getElementById("action-canvas");
+    const actionCtx = actionCanvas.getContext("2d");
+    ({ left, right, top, bottom } = actionCanvas.getBoundingClientRect());
+    const actionCanvasWidth = right - left;
+    const actionCanvasHeight = bottom - top
+    actionCtx.clearRect(0, 0, actionCanvasWidth, actionCanvasHeight);
+    gameCtx.clearRect(0, 0, gameCanvasWidth, gameCanvasHeight);
+    const gameCanvasClone = gameCanvas.cloneNode(true);
+    const actionCanvasClone = actionCanvas.cloneNode(true);
+    gameCanvas.parentNode.replaceChild(gameCanvasClone, gameCanvas);
+    actionCanvas.parentNode.replaceChild(actionCanvasClone, actionCanvas);
+    actionCanvas.style.display = 'none';
+    setGameState(new Game(DEFAULT_WIDTH, DEFAULT_HEIGHT, { regularTokens: DEFAULT_TOKENS.regularTokens }, addTimeCallback));
+    setActiveTimer(true);
+    setSeconds(startSeconds)
+    const sidebarScore = document.querySelector('.sidebar-score');
+    if (sidebarScore) {
+      gameState.setBoardScore(0);
+      sidebarScore.innerHTML = `Score: ${gameState.getBoardScore()}`;
+    }
+  }
+  return newGameCallback;
+}
 
 
-function Gameboard(props) {  
-  const { game } = props;
+export function Gameboard(props) {  
+  const { game, setGame, canvasWidth, canvasHeight, setSeconds, startSeconds, setActiveTimer, addTimeCallback } = props;
   const firstUpdate = useRef(true);
   useLayoutEffect(() => {
     if (firstUpdate.current) {
@@ -510,15 +536,28 @@ function Gameboard(props) {
     gameCanvas.addEventListener('mousedown', tokenMouseDownCallbackFactory(game));
     gameCanvas.addEventListener('touchstart', tokenMouseDownCallbackFactory(game));
   }, [game]);
-
+  const subtitleDisplay = window.innerHeight <= 800 ? 'none' : 'block';
+  const subtitleStyle = {width: canvasWidth, textAlign: 'center', left: '5%', position: 'relative', display: subtitleDisplay};
+  const scoreboardContainerStyle = {width: canvasWidth, left: '5%', position: 'relative', height: window.innerHeight * 0.07}
   return (
     <>
       <section className="homepage-gameboard">
+        <section className="gameboard-canvas-container">
+          <p className="homepage-subtitle" style={subtitleStyle}>Eliminate those greenhouse gases! Match three in a row to remove gases and score points.</p>
+        </section>
         <canvas id="gameboard-canvas" className="gameboard-canvas" width={canvasWidth} height={canvasHeight}/>
       </section>
-      <canvas id="action-canvas" className="action-canvas" width={windowWidth} height={windowHeight} />
+      <section className="scoreboard-container" style={scoreboardContainerStyle}>
+        <section id="score-container" className="score-container">
+          <span className="score-label">SCORE</span>
+          <span id="score-value" className="score-value">{game.getBoardScore()}</span>
+        </section>
+        <section className="timer-container">
+        </section>
+        <button className="new-game-button" onClick={newGameCallbackFactory(setGame, game, setSeconds, startSeconds, setActiveTimer, addTimeCallback)}>NEW GAME</button>
+        <section/>
+      </section>
+      <canvas id="action-canvas" className="action-canvas" width={window.innerWidth} height={window.innerHeight} />
     </>
   );
 }
-
-export default Gameboard;

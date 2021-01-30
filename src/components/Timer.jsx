@@ -1,16 +1,16 @@
 import React, { useEffect } from 'react';
 
 export default function Timer(props) {
-  const { seconds, setSeconds } = props;
+  const { seconds, setSeconds, active, small} = props;
   
   useEffect(() => {
     let interval = null;
-    if (seconds > 0) {
+    if (active && seconds > 0) {
       interval = setInterval(() => {
         setSeconds(seconds => seconds - 1);
       }, 1000);
     }
-    else {
+    else if (active) {
       clearInterval(interval);
       const gameCanvas = document.getElementById("gameboard-canvas");
       const actionCanvas = document.getElementById("action-canvas");
@@ -23,15 +23,19 @@ export default function Timer(props) {
       actionCanvas.style.display = 'none';
     }
     return () => clearInterval(interval);
-  }, [seconds, setSeconds]);
+  }, [seconds, setSeconds, active]);
   
-  const timerClassNames = `timer ${seconds < 60 ? 'timer-red' : ''}`;
-  const timerText = seconds < 60 
-    ? `${seconds % 60} seconds remaining` 
-    : `${Math.floor(seconds / 60)} minutes and ${seconds % 60} seconds remaining`;
+  const timerClassNames = `timer ${seconds < 60 ? 'timer-red' : ''} ${small ? 'small' : ''}`;
+  const secondsText = (seconds % 60 < 10) ? `0${seconds % 60}` : seconds % 60;
+  const timerText = seconds < 60 ? `:${secondsText}` : `${Math.floor(seconds / 60)}:${secondsText}`;
   return (
     <section className={timerClassNames}>
-      {timerText}
+      <section className="timer-value">
+        {timerText}
+      </section>
+      <section className="timer-label">
+        {"TIME REMAINING"}
+      </section>
     </section>
   )
 }
