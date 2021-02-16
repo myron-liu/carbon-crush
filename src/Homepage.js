@@ -92,13 +92,8 @@ function Homepage() {
       <article className="homepage-game">
         <Gameboard 
           game={gameState} 
-          setGame={setGameState} 
-          startSeconds={DEFAULT_START_SECONDS} 
-          setSeconds={setSeconds}
-          setActiveTimer={setActiveTimer}
           canvasWidth={canvasWidth} 
           canvasHeight={canvasHeight}
-          addTimeCallback={addTimeCallback}
         />
       </article>
     </main>

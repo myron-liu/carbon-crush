@@ -180,8 +180,7 @@ export class Game {
     }
     const token = this.boardSquares[row][col];
     if (token.isSpecial) {
-      console.log(10);
-      this.addTimeCallback(10);
+      this.addTimeCallback(token.value);
     }
     this.captureCount[token.name] += 1;
     this.boardScore += token.value;
@@ -350,6 +349,12 @@ export class Game {
         }
       }
     }
+    let additionalTime = 0;
+    const tokensArray = Array.from(tokens);
+    for (let i = 0; i < tokensArray.length; i++) {
+      additionalTime += 5;
+    }
+    this.addTimeCallback(additionalTime);
     return Array.from(tokens);
   }
 
