@@ -7,13 +7,13 @@
   'methane': 2,
   'nitrous-oxide': 4,
   'pfc': 8,
-  'cfc': 9,
+  'hfc': 9,
   'sulfur-hexafluoride': 10,
   'special-carbon-dioxide': 2,
   'special-methane': 4,
   'special-nitrous-oxide': 8,
   'special-pfc': 16,
-  'special-cfc': 18,
+  'special-hfc': 18,
   'special-sulfur-hexafluoride': 20,
   'carbon-bomb': 100,
  };
@@ -35,7 +35,7 @@ export const DEFAULT_TOKENS = {
     'carbon-dioxide',
     'nitrous-oxide',
     'pfc',
-    'cfc',
+    'hfc',
     'sulfur-hexafluoride',
     'methane'
   ],
@@ -43,7 +43,7 @@ export const DEFAULT_TOKENS = {
     'special-carbon-dioxide',
     'special-nitrous-oxide',
     'special-pfc',
-    'special-cfc',
+    'special-hfc',
     'special-sulfur-hexafluoride',
     'special-methane'
   ]

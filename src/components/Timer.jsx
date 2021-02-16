@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 
 export default function Timer(props) {
-  const { seconds, setSeconds, active, small} = props;
+  const { seconds, setSeconds, active } = props;
   
   useEffect(() => {
     let interval = null;
@@ -25,17 +25,18 @@ export default function Timer(props) {
     return () => clearInterval(interval);
   }, [seconds, setSeconds, active]);
   
-  const timerClassNames = `timer ${seconds < 60 ? 'timer-red' : ''} ${small ? 'small' : ''}`;
+  const timerClassNames = `timer ${seconds < 60 ? 'timer-red' : ''}`;
   const secondsText = (seconds % 60 < 10) ? `0${seconds % 60}` : seconds % 60;
   const timerText = seconds < 60 ? `:${secondsText}` : `${Math.floor(seconds / 60)}:${secondsText}`;
   return (
     <section className={timerClassNames}>
+      <section className="timer-label">
+        {"TIME"}
+      </section>
       <section className="timer-value">
         {timerText}
       </section>
-      <section className="timer-label">
-        {"TIME REMAINING"}
-      </section>
+
     </section>
   )
 }

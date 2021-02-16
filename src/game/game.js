@@ -20,6 +20,15 @@ const MAX_BOARD_HEIGHT = 12;
 export const DEFAULT_WIDTH = 9;
 export const DEFAULT_HEIGHT = 9;
 
+export const SPECIAL_TOKEN_NAME_TO_NAME_MAP = {
+  'special-carbon-dioxide': 'carbon-dioxide',
+  'special-nitrous-oxide': 'nitrous-oxide',
+  'special-hfc': 'hfc',
+  'special-pfc': 'pfc',
+  'special-sulfur-hexafluoride': 'sulfur-hexafluoride',
+  'special-methane': 'methane',
+};
+
  /** Precondition functions */
 function boardConstructorPreconditions(width, height) {
   if (width < MIN_BOARD_WIDTH) {
@@ -251,6 +260,9 @@ export class Game {
           tokens.add(token);
           if (token.isSpecial) {
             for (let x = 0; x < this.boardWidth; x++) {
+              if (token.isBomb) {
+                continue;
+              }
               token = this.getToken(row, x);
               tokens.add(token);
             }
@@ -319,11 +331,15 @@ export class Game {
 
   getAllTokensOfType(token) {
     const tokens = new Set();
+    let mainName = token.name;
+    if (token.isSpecial) {
+      mainName = SPECIAL_TOKEN_NAME_TO_NAME_MAP[mainName];
+    }
     for (let row = 0; row < this.boardHeight; row++) {
       for (let col = 0; col < this.boardWidth; col++) {
         const secondToken = this.getToken(row, col);
         const { name } = secondToken;
-        if (this.isTokenMatch(token.name, name) || token.isBomb) {
+        if (this.isTokenMatch(mainName, name) || token.isBomb) {
           tokens.add(secondToken);
           if (secondToken.isSpecial) {
             for (let x = 0; x < this.boardWidth; x++) {
@@ -468,6 +484,8 @@ export class Game {
   }
 
   isTokenMatch(name, secondName) {
-    return name === secondName || `special-${name}` === secondName || name === `special-${secondName}`;
+    return name === secondName || `special-${name}` === secondName || 
+      name === `special-${secondName}` || SPECIAL_TOKEN_NAME_TO_NAME_MAP[name] === secondName ||
+      SPECIAL_TOKEN_NAME_TO_NAME_MAP[secondName] === secondName;
   }
 }

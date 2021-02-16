@@ -1,14 +1,12 @@
 import './Gameboard.css';
-import { DEFAULT_TOKENS } from '../game/token.js';
-import { Game, DEFAULT_WIDTH, DEFAULT_HEIGHT } from '../game/game.js';
 import CARBON_DIOXIDE from '../assets/carbon-dioxide.png';
-import CFC from '../assets/cfc.png';
+import HFC from '../assets/hfc.png';
 import PFC from '../assets/pfc.png';
 import SULFUR_HEXAFLUORIDE from '../assets/sulfur-hexafluoride.png';
 import NITROUS_OXIDE from '../assets/nitrous-oxide.png';
 import METHANE from '../assets/methane.png';
 import SPECIAL_CARBON_DIOXIDE from '../assets/special-carbon-dioxide.png';
-import SPECIAL_CFC from '../assets/special-cfc.png';
+import SPECIAL_HFC from '../assets/special-hfc.png';
 import SPECIAL_PFC from '../assets/special-pfc.png';
 import SPECIAL_SULFUR_HEXAFLUORIDE from '../assets/special-sulfur-hexafluoride.png';
 import SPECIAL_NITROUS_OXIDE from '../assets/special-nitrous-oxide.png';
@@ -24,21 +22,21 @@ let touchEndEventListener = null;
 export const TOKEN_TO_IMAGE_PATH_MAP = {
   'carbon-dioxide': CARBON_DIOXIDE,
   'nitrous-oxide': NITROUS_OXIDE,
-  'cfc': CFC,
+  'hfc': HFC,
   'pfc': PFC,
   'sulfur-hexafluoride': SULFUR_HEXAFLUORIDE,
   'methane': METHANE,
   'special-carbon-dioxide': SPECIAL_CARBON_DIOXIDE,
   'special-nitrous-oxide': SPECIAL_NITROUS_OXIDE,
-  'special-cfc': SPECIAL_CFC,
+  'special-hfc': SPECIAL_HFC,
   'special-pfc': SPECIAL_PFC,
   'special-sulfur-hexafluoride': SPECIAL_SULFUR_HEXAFLUORIDE,
   'special-methane': SPECIAL_METHANE,
   'carbon-bomb': CARBON_BOMB,
 };
 
+const TOKEN_RESIZE_PERCENT = 0.85;
 const LOADED_TOKEN_IMAGE_CACHE = {};
-
 
 function loadTokenImages() {
   for (const key in TOKEN_TO_IMAGE_PATH_MAP) {
@@ -81,7 +79,9 @@ function tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffs
   const gameCanvasHeight = bottom - top;
   const tokenWidth = gameCanvasWidth / game.getBoardWidth();
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
-  actionCtx.drawImage(tokenImage, prevX - initialXOffset, prevY - initialYOffset, tokenWidth, tokenHeight);
+  const TOKEN_X_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenWidth;
+  const TOKEN_Y_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenHeight;
+  drawToken(actionCtx, tokenImage, prevX - initialXOffset + TOKEN_X_OFFSET, prevY - initialYOffset + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
 
   function tokenMoveCallback(e) {
     let { offsetX, offsetY } = e;
@@ -94,7 +94,7 @@ function tokenMoveCallbackFactory(game, tokenImage, initialXOffset, initialYOffs
     actionCtx.clearRect(prevX - initialXOffset, prevY - initialYOffset, actionCanvas.width, actionCanvas.height);
     prevX = offsetX;
     prevY = offsetY;
-    actionCtx.drawImage(tokenImage, offsetX - initialXOffset, offsetY - initialYOffset, tokenWidth, tokenHeight);
+    drawToken(actionCtx, tokenImage, offsetX - initialXOffset + TOKEN_X_OFFSET, offsetY - initialYOffset + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
   }
   return tokenMoveCallback;
 }
@@ -109,6 +109,8 @@ function dropTokenAnimation(game) {
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
   const actionCanvas = document.getElementById('action-canvas');
   const actionCtx = actionCanvas.getContext('2d');
+  const TOKEN_X_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenWidth;
+  const TOKEN_Y_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenHeight;
 
   const tokenDropFrame = 10;
   const tokenDropRate = tokenHeight / tokenDropFrame;
@@ -163,7 +165,7 @@ function dropTokenAnimation(game) {
           gameCtx.clearRect(currentX, currentY, tokenWidth, tokenHeight);
           colDestinationSquares[row] -= 1;
           const tokenImage = getTokenImage(colTokenSquares[row].name);
-          gameCtx.drawImage(tokenImage, currentX, currentY + tokenDropRate, tokenWidth, tokenHeight);
+          drawToken(gameCtx, tokenImage, currentX + TOKEN_X_OFFSET, currentY + tokenDropRate + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
           completed = false;
         }
       }
@@ -177,7 +179,7 @@ function dropTokenAnimation(game) {
           gameCtx.clearRect(currentX, currentY, tokenWidth, tokenHeight);
           colGeneratedTokenDistance[i] += 1;
           const tokenImage = getTokenImage(colGeneratedTokens[i].name);
-          gameCtx.drawImage(tokenImage, currentX, currentY + tokenDropRate, tokenWidth, tokenHeight);
+          drawToken(gameCtx, tokenImage, currentX + TOKEN_X_OFFSET, currentY + tokenDropRate + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
           completed = false;
         }
       }
@@ -230,6 +232,8 @@ function captureTokenAnimation(game) {
   const capturedTokens = game.findCapturedTokens();
   const quadrupletCapturedTokens = game.findQuadrupletCapturedTokens();
   const bombCapturedTokens = game.findBombCapturedTokens();
+  const TOKEN_X_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenWidth;
+  const TOKEN_Y_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenHeight;
   for (const token of capturedTokens) {
     const { row, col } = token;
     game.captureToken(row, col);
@@ -247,7 +251,7 @@ function captureTokenAnimation(game) {
     const bombToken = new Token('carbon-bomb', row, col, false, true);
     game.setBoardSquare(bombToken, row, col);
     const tokenImage = getTokenImage(bombToken.name);
-    gameCtx.drawImage(tokenImage, col * tokenWidth, row * tokenHeight, tokenWidth, tokenHeight);
+    drawToken(gameCtx, tokenImage, col * tokenWidth + TOKEN_X_OFFSET, row * tokenHeight + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
   }
   for (let i = 0; i < quadrupletCapturedTokens.length; i++) {
     const tokenSet = quadrupletCapturedTokens[i];
@@ -261,7 +265,7 @@ function captureTokenAnimation(game) {
     const specialToken = new Token(`special-${randToken.name}`, row, col, true, false);
     game.setBoardSquare(specialToken, row, col);
     const tokenImage = getTokenImage(specialToken.name);
-    gameCtx.drawImage(tokenImage, col * tokenWidth, row * tokenHeight, tokenWidth, tokenHeight);
+    drawToken(gameCtx, tokenImage, col * tokenWidth + TOKEN_X_OFFSET, row * tokenHeight + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
   }
   actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
   const sidebarScore = document.getElementById("score-value");
@@ -285,6 +289,8 @@ function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, co
   const token0col = col0 * tokenHeight;
   const token1col = col1 * tokenWidth;
   const token1row = row1 * tokenHeight;
+  const TOKEN_X_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenWidth;
+  const TOKEN_Y_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenHeight;
   
   const numAnimationFrames = 10;
   const animationIncrementCol = (token1col - token0col) / numAnimationFrames;
@@ -293,8 +299,8 @@ function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, co
   actionCanvas.style.display = 'block';
   gameCtx.clearRect(token0col, token0row, tokenWidth, tokenHeight);
   gameCtx.clearRect(token1col, token1row, tokenWidth, tokenHeight);
-  gameCtx.drawImage(tokenImage0, token0col, token0row, tokenWidth, tokenHeight);
-  actionCtx.drawImage(tokenImage1, left + token1col, top + token1row, tokenWidth, tokenHeight);
+  drawToken(gameCtx, tokenImage0, token0col + TOKEN_X_OFFSET, token0row + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
+  drawToken(actionCtx, tokenImage1, left + token1col + TOKEN_X_OFFSET, top + token1row + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
   let prev0row = token0row;
   let prev0col = token0col;
   let prev1row = top + token1row;
@@ -307,15 +313,15 @@ function flipTokenAnimation(game, tokenImage0, row0, col0, tokenImage1, row1, co
   let numFrames = 0;
   function flipTokenAnimationStep() {
     if (numFrames >= numAnimationFrames) {
-      gameCtx.drawImage(tokenImage1, prev1col - left, prev1row - top, tokenWidth, tokenHeight);
+      drawToken(gameCtx, tokenImage1, prev1col - left + TOKEN_X_OFFSET, prev1row - top + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
       actionCtx.clearRect(0, 0, actionCanvas.width, actionCanvas.height);
       captureTokenAnimation(game);
       return;
     }
     gameCtx.clearRect(prev0col, prev0row, tokenWidth, tokenHeight);
     actionCtx.clearRect(prev1col, prev1row, tokenWidth, tokenHeight);
-    gameCtx.drawImage(tokenImage0, next0col, next0row, tokenWidth, tokenHeight);
-    actionCtx.drawImage(tokenImage1, next1col, next1row, tokenWidth, tokenHeight);
+    drawToken(gameCtx, tokenImage0, next0col + TOKEN_X_OFFSET, next0row + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
+    drawToken(actionCtx, tokenImage1, next1col + TOKEN_X_OFFSET, next1row, tokenWidth + TOKEN_Y_OFFSET, tokenHeight, TOKEN_RESIZE_PERCENT);
 
     prev0row = next0row;
     prev0col = next0col;
@@ -364,11 +370,13 @@ function tokenMouseUpCallbackFactory(game, token, tokenImage, tokenMoveCallback)
   const gameCanvasHeight = bottom - top;
   const tokenWidth = gameCanvasWidth / game.getBoardWidth();
   const tokenHeight = gameCanvasHeight / game.getBoardHeight();
+  const TOKEN_X_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenWidth;
+  const TOKEN_Y_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenHeight;
   function tokenMouseUpCallback(e) {
     actionCanvas.removeEventListener('mousemove', tokenMoveCallback);
     actionCanvas.removeEventListener('touchmove', tokenMoveCallback);
     actionCtx.clearRect(0, 0, actionCanvas.clientWidth, actionCanvas.clientHeight);
-    gameCtx.drawImage(tokenImage, token.col * tokenWidth, token.row * tokenHeight, tokenWidth, tokenHeight);
+    drawToken(gameCtx, tokenImage, token.col * tokenWidth + TOKEN_X_OFFSET, token.row * tokenHeight + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, TOKEN_RESIZE_PERCENT);
     if (mouseUpEventListener !== null) {
       actionCanvas.removeEventListener('mouseup', mouseUpEventListener);
     }
@@ -475,40 +483,13 @@ function tokenMouseDownCallbackFactory(game) {
   }
   return tokenMouseDownCallback;
 }
-function newGameCallbackFactory(setGameState, gameState, setSeconds, startSeconds, setActiveTimer, addTimeCallback) {
-    function newGameCallback() {
-    const gameCanvas = document.getElementById("gameboard-canvas");
-    const gameCtx = gameCanvas.getContext("2d");
-    let { left, right, top, bottom } = gameCanvas.getBoundingClientRect();
-    const gameCanvasWidth = right - left;
-    const gameCanvasHeight = bottom - top;
-    const actionCanvas = document.getElementById("action-canvas");
-    const actionCtx = actionCanvas.getContext("2d");
-    ({ left, right, top, bottom } = actionCanvas.getBoundingClientRect());
-    const actionCanvasWidth = right - left;
-    const actionCanvasHeight = bottom - top
-    actionCtx.clearRect(0, 0, actionCanvasWidth, actionCanvasHeight);
-    gameCtx.clearRect(0, 0, gameCanvasWidth, gameCanvasHeight);
-    const gameCanvasClone = gameCanvas.cloneNode(true);
-    const actionCanvasClone = actionCanvas.cloneNode(true);
-    gameCanvas.parentNode.replaceChild(gameCanvasClone, gameCanvas);
-    actionCanvas.parentNode.replaceChild(actionCanvasClone, actionCanvas);
-    actionCanvas.style.display = 'none';
-    setGameState(new Game(DEFAULT_WIDTH, DEFAULT_HEIGHT, { regularTokens: DEFAULT_TOKENS.regularTokens }, addTimeCallback));
-    setActiveTimer(true);
-    setSeconds(startSeconds)
-    const sidebarScore = document.querySelector('.sidebar-score');
-    if (sidebarScore) {
-      gameState.setBoardScore(0);
-      sidebarScore.innerHTML = `Score: ${gameState.getBoardScore()}`;
-    }
-  }
-  return newGameCallback;
+
+function drawToken(ctx, tokenImage, x, y, width, height, resizePercent) {
+  ctx.drawImage(tokenImage, x, y, width * resizePercent, height * resizePercent);
 }
 
-
 export function Gameboard(props) {  
-  const { game, setGame, canvasWidth, canvasHeight, setSeconds, startSeconds, setActiveTimer, addTimeCallback } = props;
+  const { game, canvasWidth, canvasHeight } = props;
   const firstUpdate = useRef(true);
   useLayoutEffect(() => {
     if (firstUpdate.current) {
@@ -522,6 +503,8 @@ export function Gameboard(props) {
     const gameCanvasHeight = bottom - top;
     const tokenWidth = gameCanvasWidth / game.getBoardWidth();
     const tokenHeight = gameCanvasHeight / game.getBoardHeight();
+    const TOKEN_X_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenWidth;
+    const TOKEN_Y_OFFSET = ((1 - TOKEN_RESIZE_PERCENT) / 2) * tokenHeight;
     gameCtx.clearRect(0, 0, gameCanvasWidth, gameCanvasHeight);
     for (let row = 0; row < game.getBoardHeight(); row++) {
       for (let col = 0; col < game.getBoardWidth(); col++) {
@@ -530,32 +513,17 @@ export function Gameboard(props) {
         }
         const token = game.getToken(row, col);
         let tokenImage = getTokenImage(token.name);
-        gameCtx.drawImage(tokenImage, token.col * tokenWidth, token.row * tokenHeight, tokenWidth, tokenHeight);
+        drawToken(gameCtx, tokenImage, token.col * tokenWidth + TOKEN_X_OFFSET, token.row * tokenHeight + TOKEN_Y_OFFSET, tokenWidth, tokenHeight, 0.85);
       }
     }
     gameCanvas.addEventListener('mousedown', tokenMouseDownCallbackFactory(game));
     gameCanvas.addEventListener('touchstart', tokenMouseDownCallbackFactory(game));
   }, [game]);
-  const subtitleDisplay = window.innerHeight <= 800 ? 'none' : 'block';
-  const subtitleStyle = {width: canvasWidth, textAlign: 'center', left: '5%', position: 'relative', display: subtitleDisplay};
-  const scoreboardContainerStyle = {width: canvasWidth, left: '5%', position: 'relative', height: window.innerHeight * 0.07}
+  
   return (
     <>
       <section className="homepage-gameboard">
-        <section className="gameboard-canvas-container">
-          <p className="homepage-subtitle" style={subtitleStyle}>Eliminate those greenhouse gases! Match three in a row to remove gases and score points.</p>
-        </section>
         <canvas id="gameboard-canvas" className="gameboard-canvas" width={canvasWidth} height={canvasHeight}/>
-      </section>
-      <section className="scoreboard-container" style={scoreboardContainerStyle}>
-        <section id="score-container" className="score-container">
-          <span className="score-label">SCORE</span>
-          <span id="score-value" className="score-value">{game.getBoardScore()}</span>
-        </section>
-        <section className="timer-container">
-        </section>
-        <button className="new-game-button" onClick={newGameCallbackFactory(setGame, game, setSeconds, startSeconds, setActiveTimer, addTimeCallback)}>NEW GAME</button>
-        <section/>
       </section>
       <canvas id="action-canvas" className="action-canvas" width={window.innerWidth} height={window.innerHeight} />
     </>
