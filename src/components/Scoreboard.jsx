@@ -2,7 +2,7 @@ import Timer from './Timer.jsx';
 import { Game, DEFAULT_WIDTH, DEFAULT_HEIGHT } from '../game/game.js';
 import { DEFAULT_TOKENS } from '../game/token.js'
 
-function newGameCallbackFactory(setGameState, gameState, setSeconds, startSeconds, setActiveTimer, addTimeCallback) {
+function newGameCallbackFactory(setGameState, gameState, setSeconds, startSeconds, setActiveTimer, addTimeCallback, startMusic) {
   function newGameCallback() {
     const gameCanvas = document.getElementById("gameboard-canvas");
     const gameCtx = gameCanvas.getContext("2d");
@@ -23,7 +23,8 @@ function newGameCallbackFactory(setGameState, gameState, setSeconds, startSecond
     actionCanvas.style.display = 'none';
     setGameState(new Game(DEFAULT_WIDTH, DEFAULT_HEIGHT, { regularTokens: DEFAULT_TOKENS.regularTokens }, addTimeCallback));
     setActiveTimer(true);
-    setSeconds(startSeconds)
+    setSeconds(startSeconds);
+    startMusic();
     const sidebarScore = document.querySelector('.sidebar-score');
     if (sidebarScore) {
       gameState.setBoardScore(0);
@@ -34,15 +35,15 @@ function newGameCallbackFactory(setGameState, gameState, setSeconds, startSecond
 }
 
 function Scoreboard(props) {
-  const { setGameState, gameState, seconds, setSeconds, active, setActiveTimer, startSeconds, addTimeCallback } = props;
+  const { setGameState, gameState, seconds, setSeconds, active, setActiveTimer, startSeconds, addTimeCallback, startMusic } = props;
   return (
     <section className="scoreboard-container">
-      <Timer seconds={seconds} setSeconds={setSeconds} active={active}/>
+      <Timer seconds={seconds} setSeconds={setSeconds} active={active} />
       <section id="score-container" className="score-container">
         <span className="score-label">SCORE</span>
         <span id="score-value" className="score-value">{gameState.getBoardScore()}</span>
       </section>
-      <button className="new-game-button" onClick={newGameCallbackFactory(setGameState, gameState, setSeconds, startSeconds, setActiveTimer, addTimeCallback)}>NEW GAME</button>
+      <button className="new-game-button" onClick={newGameCallbackFactory(setGameState, gameState, setSeconds, startSeconds, setActiveTimer, addTimeCallback, startMusic)}>NEW GAME</button>
     </section>
   );
 }

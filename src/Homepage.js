@@ -6,6 +6,11 @@ import { Gameboard } from './components/Gameboard.jsx';
 import { DEFAULT_TOKENS } from './game/token.js';
 import { Game, DEFAULT_WIDTH, DEFAULT_HEIGHT } from './game/game.js';
 import { useState, useRef } from 'react';
+import { Howl, Howler } from "howler"
+
+import SOUNDTRACK from './assets/sounds/sm_crushmusic1.mp3';
+import MUTE_ICON from './assets/mute_icon.svg';
+import UNMUTE_ICON from './assets/unmute_icon.svg';
 
 let windowWidth = window.innerWidth;
 let windowHeight = window.innerHeight;
@@ -44,6 +49,11 @@ canvasHeight = canvasWidth;
 
 const DEFAULT_START_SECONDS = 300;
 
+const SOUNDTRACK_CLIP = new Howl({
+  src: [SOUNDTRACK],
+  loop: true,
+})
+
 function Homepage() {
   const [seconds, setSeconds] = useState(DEFAULT_START_SECONDS);
   const secondsRef = useRef();
@@ -51,15 +61,32 @@ function Homepage() {
   function addTimeCallback(time) {
     setSeconds(secondsRef.current + time);
   }
+
+  // setup mute / unmute button
+  const [muted, setMuted] = useState(false);
+  function toggleMute() {
+    Howler.mute(!muted);
+    setMuted(!muted)
+  }
+  function startMusic() {
+    if (!SOUNDTRACK_CLIP.playing()) {
+      SOUNDTRACK_CLIP.play();
+    }
+  }
+  startMusic();
+
   const [gameState, setGameState] = useState(
     new Game(DEFAULT_WIDTH, DEFAULT_HEIGHT, { regularTokens: DEFAULT_TOKENS.regularTokens }, addTimeCallback));
   const [displaySpecialAchievements, toggleSpecialAchievements] = useState(false);
   const [activeTimer, setActiveTimer] = useState(false);
 
-  const homepageMenuStyle = {width: 0.75 * (windowWidth - canvasWidth)};
+  const homepageMenuStyle = { width: 0.75 * (windowWidth - canvasWidth) };
+
+
 
   return (
     <main className="homepage">
+      <img id="mute_button" onClick={() => { toggleMute() }} alt={muted ? "unmute" : "mute"} src={muted ? MUTE_ICON : UNMUTE_ICON} role="button"></img>
       <article className="homepage-menu" style={homepageMenuStyle}>
         <section className="homepage-header">
           <section className="homepage-title">
@@ -73,11 +100,11 @@ function Homepage() {
         </section>
         <section className="homepage-submenu">
           <Achievements
-            gameState={gameState} 
-            toggleSpecialAchievements={toggleSpecialAchievements} 
+            gameState={gameState}
+            toggleSpecialAchievements={toggleSpecialAchievements}
             displaySpecialAchievements={displaySpecialAchievements}
           />
-          <Scoreboard 
+          <Scoreboard
             gameState={gameState}
             setGameState={setGameState}
             seconds={seconds}
@@ -86,13 +113,14 @@ function Homepage() {
             active={activeTimer}
             setActiveTimer={setActiveTimer}
             addTimeCallback={addTimeCallback}
+            startMusic={startMusic}
           />
         </section>
       </article>
       <article className="homepage-game">
-        <Gameboard 
-          game={gameState} 
-          canvasWidth={canvasWidth} 
+        <Gameboard
+          game={gameState}
+          canvasWidth={canvasWidth}
           canvasHeight={canvasHeight}
         />
       </article>
