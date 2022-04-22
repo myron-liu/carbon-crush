@@ -2,11 +2,23 @@
   font-family: 'Roboto';
   font-style: normal;
   font-weight: 400;
-  src: local('Roboto Regular'), 
-       local('Roboto-Regular'), 
-       url(http://themes.googleusercontent.com/static/fonts/roboto/v11/2UX7WLTfW3W8TclTUvlFyQ.woff) 
-       format('woff');
+  src: local('Roboto Regular'),
+    local('Roboto-Regular'),
+    url(http://themes.googleusercontent.com/static/fonts/roboto/v11/2UX7WLTfW3W8TclTUvlFyQ.woff) format('woff');
 }
+
+#mute_button {
+  width: 3em;
+
+  cursor: pointer;
+
+  border-radius: 8px;
+  background: white;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+}
+
 
 a {
   text-decoration: none;
@@ -298,7 +310,7 @@ a {
   z-index: 3;
   visibility: visible;
   color: #000000;
-  background-color: #C3EAEA;  
+  background-color: #C3EAEA;
   width: 100px;
   top: 45px;
   cursor: pointer;
@@ -612,4 +624,3 @@ a {
     margin-top: 40px;
   }
 }
-

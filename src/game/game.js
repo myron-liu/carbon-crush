@@ -9,7 +9,7 @@ import { DEFAULT_TOKENS, Token } from './token.js';
  * size-1.  Square [0,0] is in the upper-left corner of the carbon-board.
  * Rows are numbered downward, and columns are numbered to the right.
  * The carbon type on each square is random.
- * 
+ *
  */
 
 /** Constants */
@@ -29,7 +29,7 @@ export const SPECIAL_TOKEN_NAME_TO_NAME_MAP = {
   'special-methane': 'methane',
 };
 
- /** Precondition functions */
+/** Precondition functions */
 function boardConstructorPreconditions(width, height) {
   if (width < MIN_BOARD_WIDTH) {
     throw new Error(`Min width of board is ${MIN_BOARD_WIDTH}, got width: ${width}`);
@@ -77,7 +77,7 @@ export class Game {
       }
     }
     this.refillTokens();
-    // capture tokens if there available options 
+    // capture tokens if there available options
     // we want to generate a game state that doesn't have automatic captures
     while (this.findCapturedTokens().length !== 0) {
       this.captureTokens(false);
@@ -143,7 +143,7 @@ export class Game {
   }
 
   /**
-   * Returns true if the square corresponding to row and column location is empty 
+   * Returns true if the square corresponding to row and column location is empty
    * @param {*number} row - row value (indexed from 0 - starting from top left going right)
    * @param {*number} col - column value (indexed from 0 - starting from top left going down)
    * @returns boolean
@@ -168,12 +168,12 @@ export class Game {
     return this.boardSquares[row][col];
   }
 
-    /**
-   * Returns the token corresponding to row and column if it is a valid square on the board.
-   * @param {*number} row - row value (indexed from 0 - starting from top left going right)
-   * @param {*number} col - column value (indexed from 0 - starting from top left going down)
-   * @returns Token object or null
-   */
+  /**
+ * Returns the token corresponding to row and column if it is a valid square on the board.
+ * @param {*number} row - row value (indexed from 0 - starting from top left going right)
+ * @param {*number} col - column value (indexed from 0 - starting from top left going down)
+ * @returns Token object or null
+ */
   captureToken(row, col) {
     if (!this.isValidLocation(row, col)) {
       throw new Error(`Invalid location, got row: ${row}, col: ${col}`);
@@ -289,7 +289,7 @@ export class Game {
   detectQuadrupletCapture(token) {
     const { row, col, name } = token;
     const tokenSet = [];
-    
+
     const leftToken = this.isValidLocation(row, col - 1) ? this.getToken(row, col - 1) : null;
     const rightToken = this.isValidLocation(row, col + 1) ? this.getToken(row, col + 1) : null;
     const secondRightToken = this.isValidLocation(row, col + 2) ? this.getToken(row, col + 2) : null;
@@ -375,7 +375,7 @@ export class Game {
   detectQuintupletCapture(token) {
     const { row, col, name } = token;
     const tokenSet = [];
-    
+
     const leftToken = this.isValidLocation(row, col - 1) ? this.getToken(row, col - 1) : null;
     const rightToken = this.isValidLocation(row, col + 1) ? this.getToken(row, col + 1) : null;
     const secondRightToken = this.isValidLocation(row, col + 2) ? this.getToken(row, col + 2) : null;
@@ -489,7 +489,7 @@ export class Game {
   }
 
   isTokenMatch(name, secondName) {
-    return name === secondName || `special-${name}` === secondName || 
+    return name === secondName || `special-${name}` === secondName ||
       name === `special-${secondName}` || SPECIAL_TOKEN_NAME_TO_NAME_MAP[name] === secondName ||
       SPECIAL_TOKEN_NAME_TO_NAME_MAP[secondName] === secondName;
   }
